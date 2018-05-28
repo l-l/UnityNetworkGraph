@@ -1,0 +1,115 @@
+﻿// rough implementation of the Fruchterman-Reingold Method of force-directed graph layout
+// http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.13.8444&rep=rep1&type=pdf
+// Leonhard Lass 2018, http://depart.at
+
+
+#pragma kernel FruchtermanReingold
+
+// todo: don't use a struct, a float3 pos array is enough
+struct Node
+{
+	float3	pos;
+	bool	isStatic;
+	//float mass; // not used
+	float	 _debug;
+
+
+};
+
+RWStructuredBuffer<Node> nodeBuffer;    // A structured buffer is just an array of data consisting of a single data type
+StructuredBuffer<float2> edgeBuffer;
+//RWStructuredBuffer<float3> pos;
+
+
+
+uint	Iterations; // numer of iterations per dispatch
+float	k; // area dependent constant of the fruchterman -reingold algorithm  k=sqrt(area/numNodes);
+float	maxDist;
+float3  force;
+
+//float4	edges[1024];  // maximum of 1024 edges, abitrary >> solve differently
+//int		numEdges=0;
+
+
+// 
+[numthreads(64,1,1)]  // how many threads of the kernel to run per group.
+void FruchtermanReingold (uint3 id : SV_DispatchThreadID)
+{ 
+  
+  uint numNodes, stride;
+  nodeBuffer.GetDimensions(numNodes,stride);  // numNodes, stride are outputs 
+	//if (id.x>numNodes) return;
+	uint numEdges_;
+	edgeBuffer.GetDimensions(numEdges_,stride);
+/*
+  float area=100*100;
+  float k=sqrt(area/numNodes);
+*/
+  //float k=15.0;
+
+  float3 disp=float3(0.0, 0.0, 0.0);	//displacement of a node
+  nodeBuffer[id.x]._debug=(float)numNodes;
+  // Iterations=1;	//number of iterations per dispatch
+ if (!nodeBuffer[id.x].isStatic)
+	{
+	  for (uint n=0;n<Iterations;n++)
+		  {
+			disp=float3(0.0, 0.0, 0.0);
+			
+			for (uint i=0; i<numNodes;i++)
+				{
+						if (i!=id.x)
+								{
+									// Compute repulsive force
+
+									float3 delta =  nodeBuffer[id.x].pos-nodeBuffer[i].pos;
+									float dist=length(delta);
+									float f=k*k/dist;
+									disp=disp+ normalize(delta)*f;
+									
+									//disp=disp+normalize(delta)*0.1/length(delta);		// normalize(delta)* (RepulsionFactor*10.0/length(delta));
+
+								}
+							
+				}
+			// Compute attractive Forces of connected nodes 
+			/*
+			for (int j=0;j<numEdges;j++)
+				{	//determine the position of the current node in the node-pair to calculate the right direction
+					if(id.x==(uint)edges[j].x ) // edges[j].x is the id of the first node in the pair 
+						{float3 edgeDelta=nodeBuffer[(uint)(edges[j].y)].pos-nodeBuffer[id.x].pos;
+						//disp=disp+  edgeDelta*0.001;
+						float edgeDist=length(edgeDelta);
+						disp=disp+ normalize(edgeDelta)*   edgeDist*edgeDist/k;
+						};
+					if (id.x==(uint)edges[j].y)
+						{float3 edgeDelta=nodeBuffer[(uint)(edges[j].x)].pos-nodeBuffer[id.x].pos;
+						float edgeDist=length(edgeDelta);
+						disp=disp+ normalize(edgeDelta)*   edgeDist*edgeDist/k;
+						};
+			
+				}
+		*/
+			for (int j=0;j<numEdges_;j++)
+				{	//determine the position of the current node in the node-pair to calculate the right direction
+					if(id.x==(uint)edgeBuffer[j].x ) // edges[j].x is the id of the first node in the pair 
+						{float3 edgeDelta=nodeBuffer[(uint)(edgeBuffer[j].y)].pos-nodeBuffer[id.x].pos;
+						//disp=disp+  edgeDelta*0.001;
+						float edgeDist=length(edgeDelta);
+						disp=disp+ normalize(edgeDelta)*   edgeDist*edgeDist/k;
+						};
+					if (id.x==(uint)edgeBuffer[j].y)
+						{float3 edgeDelta=nodeBuffer[(uint)(edgeBuffer[j].x)].pos-nodeBuffer[id.x].pos;
+						float edgeDist=length(edgeDelta);
+						disp=disp+ normalize(edgeDelta)*   edgeDist*edgeDist/k;
+						};
+			
+				}
+			Node node=nodeBuffer[id.x];
+			node.pos=node.pos+normalize(disp)*min(length(disp),maxDist)  ;// limit   the   maximum   displacement, originally   to   the   temperature // node.pos-node.pos/(25.0);
+			node.pos+=force;	//optional extra force, not part of the fr algorithm
+			nodeBuffer[id.x]=node;
+			}
+	}
+};
+

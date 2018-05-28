@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Table>
+  <Nodes>
+    <Node>
+      <Node_id>1</Node_id>
+      <Node_text>Node 1</Node_text>
+      <Node_type>tyxpe</Node_type>
+      <Node_posX>12</Node_posX>
+      <Node_posY>0</Node_posY>
+      <Node_posZ>2</Node_posZ>
+    </Node>
+    <Node>
+      <Node_id>2</Node_id>
+      <Node_text>Node 2</Node_text>
+      <Node_type>tyxpe</Node_type>
+      <Node_posX>2000</Node_posX>
+      <Node_posY>3</Node_posY>
+      <Node_posZ>5</Node_posZ>
+    </Node>
+    <Node>
+      <Node_id>3</Node_id>
+      <Node_text>Node 3</Node_text>
+      <Node_type>super type</Node_type>
+      <Node_posX>3000</Node_posX>
+      <Node_posY>0</Node_posY>
+      <Node_posZ>7</Node_posZ>
+    </Node>
+    <Node>
+      <Node_id>4</Node_id>
+      <Node_text>Node 4</Node_text>
+      <Node_type>bad type</Node_type>
+      <Node_posX>4000</Node_posX>
+      <Node_posY>0</Node_posY>
+      <Node_posZ>1</Node_posZ>
+    </Node>
+  </Nodes>
+  <Edges>
+    <Edge>
+      <Edge_id>1</Edge_id>
+      <Edge_type>normal edge type</Edge_type>
+      <Edge_node1>1</Edge_node1>
+      <Edge_node2>3</Edge_node2>
+    </Edge>
+  </Edges>
+</Table>
